@@ -1,6 +1,6 @@
 import { ApiResponse, Order, PriceHistory, DashboardStats, RevenueData, Truck, BlogPost, User, FishType, WeatherForecast } from '@/types/api';
 
-const BASE_URL = 'http://localhost:3000/api/v1';
+const BASE_URL = 'http://localhost:3001/api/v1';
 
 class ApiClient {
   private async request<T>(endpoint: string, method = 'GET', body?: any): Promise<ApiResponse<T>> {
