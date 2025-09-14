@@ -1,62 +1,33 @@
-import { useEffect } from 'react';
-import { useRealTimeState } from '@/lib/store';
-import { realTimeManager } from '@/lib/realtime';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useRealTime() {
-  const {
-    connectionStatus,
-    lastUpdate,
-    pendingUpdates,
-    setConnectionStatus,
-    setLastUpdate,
-    clearPendingUpdates,
-  } = useRealTimeState();
+  const queryClient = useQueryClient();
+  const [isConnected, setIsConnected] = useState(false);
+  const [hasRecentUpdate, setHasRecentUpdate] = useState(false);
 
+  // Simulate WebSocket connection or polling
   useEffect(() => {
-    // Initialize real-time connection
-    const initConnection = () => {
-      if (typeof window !== 'undefined') {
-        realTimeManager.connect();
-      }
-    };
+    const interval = setInterval(() => {
+      setIsConnected(true);
+      setHasRecentUpdate(true);
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['orders', 'pending'] });
+      queryClient.invalidateQueries({ queryKey: ['trucks'] });
+      setTimeout(() => setHasRecentUpdate(false), 2000);
+    }, 30000);
 
-    initConnection();
+    return () => clearInterval(interval);
+  }, [queryClient]);
 
-    // Cleanup on unmount
-    return () => {
-      if (typeof window !== 'undefined') {
-        realTimeManager.disconnect();
-      }
-    };
-  }, []);
-
-  // Helper functions
   const reconnect = () => {
-    realTimeManager.disconnect();
-    setTimeout(() => {
-      realTimeManager.connect();
-    }, 1000);
+    setIsConnected(true);
+    queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    queryClient.invalidateQueries({ queryKey: ['orders'] });
+    queryClient.invalidateQueries({ queryKey: ['trucks'] });
   };
 
-  const clearUpdates = () => {
-    clearPendingUpdates();
-  };
-
-  const isConnected = connectionStatus === 'connected';
-  const isReconnecting = connectionStatus === 'reconnecting';
-  
-  const timeSinceLastUpdate = lastUpdate ? Date.now() - lastUpdate : null;
-  const hasRecentUpdate = timeSinceLastUpdate ? timeSinceLastUpdate < 60000 : false; // Within last minute
-
-  return {
-    connectionStatus,
-    lastUpdate,
-    pendingUpdates,
-    isConnected,
-    isReconnecting,
-    timeSinceLastUpdate,
-    hasRecentUpdate,
-    reconnect,
-    clearUpdates,
-  };
+  return { isConnected, hasRecentUpdate, reconnect };
 }

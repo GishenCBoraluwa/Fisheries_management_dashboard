@@ -1,8 +1,12 @@
-import { useQuery, useMutation, useInfiniteQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
-import { queryKeys, queryClient } from '@/lib/queryClient';
-import { useOrdersFilter, useUIState } from '@/lib/store';
-import { CreateOrderRequest, PaginationParams, OrdersQueryParams } from '@/types/api';
+import { useQuery, useMutation, useInfiniteQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api";
+import { queryKeys, queryClient } from "@/lib/queryClient";
+import { useOrdersFilter, useUIState } from "@/lib/store";
+import {
+  CreateOrderRequest,
+  PaginationParams,
+  OrdersQueryParams,
+} from "@/types/api";
 
 export function usePendingOrders(params?: PaginationParams) {
   const { refreshInterval } = useOrdersFilter();
@@ -35,7 +39,7 @@ export function useOrdersByStatus(params?: OrdersQueryParams) {
   return useQuery({
     queryKey: queryKeys.orders.byStatus(params),
     queryFn: () => apiClient.getOrdersByStatus(params || {}),
-    enabled: !!(params?.status), // Only fetch if status is provided
+    enabled: !!params?.status, // Only fetch if status is provided
     staleTime: 30000,
     select: (data) => ({
       orders: data.data,
@@ -57,8 +61,8 @@ export function useOrderDetail(orderId: number) {
 // Infinite query for large order lists with pagination
 export function useInfiniteOrders(params?: OrdersQueryParams) {
   return useInfiniteQuery({
-    queryKey: [...queryKeys.orders.all, 'infinite', params],
-    queryFn: ({ pageParam = 1 }) => 
+    queryKey: [...queryKeys.orders.all, "infinite", params],
+    queryFn: ({ pageParam = 1 }) =>
       apiClient.getOrdersByStatus({ ...params, page: pageParam }),
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {
@@ -75,24 +79,25 @@ export function useCreateOrder() {
   const { addNotification } = useUIState();
 
   return useMutation({
-    mutationFn: (orderData: CreateOrderRequest) => apiClient.createOrder(orderData),
+    mutationFn: (orderData: CreateOrderRequest) =>
+      apiClient.createOrder(orderData),
     onSuccess: (data) => {
       // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.dashboard.all });
-      
+
       addNotification({
-        type: 'success',
-        title: 'Order Created',
+        type: "success",
+        title: "Order Created",
         message: `Order #${data.data.order.id} created successfully`,
       });
     },
     onError: (error) => {
-      console.error('Order creation failed:', error);
+      console.error("Order creation failed:", error);
       addNotification({
-        type: 'error',
-        title: 'Order Creation Failed',
-        message: 'There was an error creating the order. Please try again.',
+        type: "error",
+        title: "Order Creation Failed",
+        message: "There was an error creating the order. Please try again.",
       });
     },
   });
@@ -103,18 +108,28 @@ export function useOptimisticOrderUpdate() {
   const { addNotification } = useUIState();
 
   return useMutation({
-    mutationFn: async ({ orderId, status }: { orderId: number; status: string }) => {
+    mutationFn: async ({
+      orderId,
+      status,
+    }: {
+      orderId: number;
+      status: string;
+    }) => {
       // This would be your API call to update order status
       // For now, simulating the call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       return { orderId, status };
     },
     onMutate: async ({ orderId, status }) => {
       // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: queryKeys.orders.detail(orderId) });
+      await queryClient.cancelQueries({
+        queryKey: queryKeys.orders.detail(orderId),
+      });
 
       // Snapshot the previous value
-      const previousOrder = queryClient.getQueryData(queryKeys.orders.detail(orderId));
+      const previousOrder = queryClient.getQueryData(
+        queryKeys.orders.detail(orderId)
+      );
 
       // Optimistically update to the new value
       if (previousOrder) {
@@ -134,16 +149,18 @@ export function useOptimisticOrderUpdate() {
           context.previousOrder
         );
       }
-      
+
       addNotification({
-        type: 'error',
-        title: 'Update Failed',
-        message: 'Failed to update order status. Please try again.',
+        type: "error",
+        title: "Update Failed",
+        message: "Failed to update order status. Please try again.",
       });
     },
     onSettled: (data, error, variables) => {
       // Always refetch after error or success
-      queryClient.invalidateQueries({ queryKey: queryKeys.orders.detail(variables.orderId) });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.orders.detail(variables.orderId),
+      });
       queryClient.invalidateQueries({ queryKey: queryKeys.orders.all });
     },
   });

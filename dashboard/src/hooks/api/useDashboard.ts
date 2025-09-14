@@ -1,7 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
-import { queryKeys } from '@/lib/queryClient';
-import { useDashboardSettings } from '@/lib/store';
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api";
+import { queryKeys } from "@/lib/queryClient";
+import { useDashboardSettings } from "@/lib/store";
 
 export function useDashboardStats() {
   const { refreshInterval } = useDashboardSettings();

@@ -5,21 +5,21 @@ import { columns } from './columns';
 import { useApi } from '@/hooks/useApi';
 import { useState } from 'react';
 
-export default function PaymentsDataTable() {
+export default function UsersDataTable() {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const { useLatestTransactions } = useApi();
-  const { data, isLoading, error } = useLatestTransactions(page, limit);
+  const { useUsers } = useApi();
+  const { data, isLoading, error } = useUsers(page, limit);
 
-  if (isLoading) return <div>Loading payments...</div>;
-  if (error) return <div>Error loading payments: {error.message}</div>;
+  if (isLoading) return <div>Loading users...</div>;
+  if (error) return <div>Error loading users: {error.message}</div>;
 
   return (
     <DataTable
       columns={columns}
-      data={data?.orders || []}
-      searchKey="id"
-      searchPlaceholder="Search payments..."
+      data={data?.users || []}
+      searchKey="email"
+      searchPlaceholder="Search users..."
       pagination={data?.pagination}
       onPageChange={setPage}
       onLimitChange={setLimit}

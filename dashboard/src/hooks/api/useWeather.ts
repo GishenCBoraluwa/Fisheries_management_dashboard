@@ -1,8 +1,8 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
-import { queryKeys, queryClient } from '@/lib/queryClient';
-import { useDashboardSettings, useUIState } from '@/lib/store';
-import { WeatherParams } from '@/types/api';
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api";
+import { queryKeys, queryClient } from "@/lib/queryClient";
+import { useDashboardSettings, useUIState } from "@/lib/store";
+import { WeatherParams } from "@/types/api";
 
 export function useWeatherForecasts(params?: WeatherParams) {
   const { selectedLocation } = useDashboardSettings();
@@ -19,7 +19,7 @@ export function useWeatherForecasts(params?: WeatherParams) {
     staleTime: 2 * 60 * 60 * 1000, // Consider stale after 2 hours
     select: (data) => {
       const forecasts = data.data;
-      
+
       return {
         forecasts,
         currentWeather: forecasts[0] || null,
@@ -33,12 +33,19 @@ export function useWeatherForecasts(params?: WeatherParams) {
 
 // Get weather for multiple locations
 export function useMultiLocationWeather() {
-  const locations = ['Colombo', 'Negombo', 'Galle', 'Trincomalee', 'Jaffna', 'Hambantota'];
+  const locations = [
+    "Colombo",
+    "Negombo",
+    "Galle",
+    "Trincomalee",
+    "Jaffna",
+    "Hambantota",
+  ];
 
   return useQuery({
-    queryKey: [...queryKeys.weather.all, 'multi-location'],
+    queryKey: [...queryKeys.weather.all, "multi-location"],
     queryFn: async () => {
-      const promises = locations.map(location => 
+      const promises = locations.map((location) =>
         apiClient.getWeatherForecasts({ location, days: 3 })
       );
       const results = await Promise.all(promises);
@@ -61,8 +68,9 @@ export function useWeatherTrends(location?: string, days: number = 30) {
   const targetLocation = location || selectedLocation;
 
   return useQuery({
-    queryKey: [...queryKeys.weather.all, 'trends', targetLocation, days],
-    queryFn: () => apiClient.getWeatherForecasts({ location: targetLocation, days }),
+    queryKey: [...queryKeys.weather.all, "trends", targetLocation, days],
+    queryFn: () =>
+      apiClient.getWeatherForecasts({ location: targetLocation, days }),
     staleTime: 6 * 60 * 60 * 1000, // 6 hours
     select: (data) => {
       const forecasts = data.data;
@@ -84,19 +92,19 @@ export function useRefreshWeatherData() {
     onSuccess: () => {
       // Invalidate all weather queries to fetch fresh data
       queryClient.invalidateQueries({ queryKey: queryKeys.weather.all });
-      
+
       addNotification({
-        type: 'success',
-        title: 'Weather Updated',
-        message: 'Weather data has been refreshed successfully',
+        type: "success",
+        title: "Weather Updated",
+        message: "Weather data has been refreshed successfully",
       });
     },
     onError: (error) => {
-      console.error('Failed to refresh weather data:', error);
+      console.error("Failed to refresh weather data:", error);
       addNotification({
-        type: 'error',
-        title: 'Weather Refresh Failed',
-        message: 'Failed to refresh weather data. Please try again.',
+        type: "error",
+        title: "Weather Refresh Failed",
+        message: "Failed to refresh weather data. Please try again.",
       });
     },
   });
@@ -106,7 +114,8 @@ export function useRefreshWeatherData() {
 function generateWeatherAlerts(forecasts: any[]) {
   const alerts = [];
 
-  for (const forecast of forecasts.slice(0, 3)) { // Check next 3 days
+  for (const forecast of forecasts.slice(0, 3)) {
+    // Check next 3 days
     const temp = parseFloat(forecast.temperature2mMean);
     const windSpeed = parseFloat(forecast.windSpeed10mMax);
     const precipitation = parseFloat(forecast.precipitationSum);
@@ -114,8 +123,8 @@ function generateWeatherAlerts(forecasts: any[]) {
     // High wind alert
     if (windSpeed > 25) {
       alerts.push({
-        type: 'wind',
-        severity: windSpeed > 35 ? 'severe' : 'moderate',
+        type: "wind",
+        severity: windSpeed > 35 ? "severe" : "moderate",
         message: `High winds expected: ${windSpeed.toFixed(1)} km/h`,
         location: forecast.location,
         date: forecast.forecastDate,
@@ -125,8 +134,8 @@ function generateWeatherAlerts(forecasts: any[]) {
     // Heavy rain alert
     if (precipitation > 50) {
       alerts.push({
-        type: 'rain',
-        severity: precipitation > 100 ? 'severe' : 'moderate',
+        type: "rain",
+        severity: precipitation > 100 ? "severe" : "moderate",
         message: `Heavy rainfall expected: ${precipitation.toFixed(1)} mm`,
         location: forecast.location,
         date: forecast.forecastDate,
@@ -136,8 +145,8 @@ function generateWeatherAlerts(forecasts: any[]) {
     // Extreme temperature alert
     if (temp > 35 || temp < 15) {
       alerts.push({
-        type: 'temperature',
-        severity: temp > 40 || temp < 10 ? 'severe' : 'moderate',
+        type: "temperature",
+        severity: temp > 40 || temp < 10 ? "severe" : "moderate",
         message: `Extreme temperature: ${temp.toFixed(1)}°C`,
         location: forecast.location,
         date: forecast.forecastDate,
@@ -158,15 +167,19 @@ function calculateWeatherAverages(forecasts: any[]) {
     };
   }
 
-  const totals = forecasts.reduce((acc, forecast) => ({
-    temperature: acc.temperature + parseFloat(forecast.temperature2mMean),
-    windSpeed: acc.windSpeed + parseFloat(forecast.windSpeed10mMax),
-    humidity: acc.humidity + parseFloat(forecast.relativeHumidity2mMean),
-    precipitation: acc.precipitation + parseFloat(forecast.precipitationSum),
-  }), { temperature: 0, windSpeed: 0, humidity: 0, precipitation: 0 });
+  const totals = forecasts.reduce(
+    (acc, forecast) => ({
+      temperature: acc.temperature + parseFloat(forecast.temperature2mMean),
+      windSpeed: acc.windSpeed + parseFloat(forecast.windSpeed10mMax),
+      humidity: acc.humidity + parseFloat(forecast.relativeHumidity2mMean),
+      precipitation: acc.precipitation + parseFloat(forecast.precipitationSum),
+    }),
+    { temperature: 0, windSpeed: 0, humidity: 0, precipitation: 0 }
+  );
 
   return {
-    avgTemperature: Math.round((totals.temperature / forecasts.length) * 10) / 10,
+    avgTemperature:
+      Math.round((totals.temperature / forecasts.length) * 10) / 10,
     avgWindSpeed: Math.round((totals.windSpeed / forecasts.length) * 10) / 10,
     avgHumidity: Math.round((totals.humidity / forecasts.length) * 10) / 10,
     totalPrecipitation: Math.round(totals.precipitation * 10) / 10,
@@ -176,18 +189,18 @@ function calculateWeatherAverages(forecasts: any[]) {
 function generateLocationSummary(locationData: any[]) {
   return locationData.map(({ location, forecasts }) => {
     const current = forecasts[0];
-    if (!current) return { location, status: 'no-data' };
+    if (!current) return { location, status: "no-data" };
 
     const temp = parseFloat(current.temperature2mMean);
     const windSpeed = parseFloat(current.windSpeed10mMax);
     const precipitation = parseFloat(current.precipitationSum);
 
     // Determine fishing conditions
-    let condition = 'good';
+    let condition = "good";
     if (windSpeed > 25 || precipitation > 30) {
-      condition = 'poor';
+      condition = "poor";
     } else if (windSpeed > 15 || precipitation > 10) {
-      condition = 'fair';
+      condition = "fair";
     }
 
     return {
@@ -202,32 +215,44 @@ function generateLocationSummary(locationData: any[]) {
 }
 
 function calculateWeatherTrends(forecasts: any[]) {
-  if (forecasts.length < 2) return { temperature: 'stable', wind: 'stable', precipitation: 'stable' };
+  if (forecasts.length < 2)
+    return { temperature: "stable", wind: "stable", precipitation: "stable" };
 
-  const sortedForecasts = forecasts.sort((a, b) => 
-    new Date(a.forecastDate).getTime() - new Date(b.forecastDate).getTime()
+  const sortedForecasts = forecasts.sort(
+    (a, b) =>
+      new Date(a.forecastDate).getTime() - new Date(b.forecastDate).getTime()
   );
 
   const first = sortedForecasts[0];
   const last = sortedForecasts[sortedForecasts.length - 1];
 
-  const tempTrend = parseFloat(last.temperature2mMean) - parseFloat(first.temperature2mMean);
-  const windTrend = parseFloat(last.windSpeed10mMax) - parseFloat(first.windSpeed10mMax);
-  const precipitationTrend = parseFloat(last.precipitationSum) - parseFloat(first.precipitationSum);
+  const tempTrend =
+    parseFloat(last.temperature2mMean) - parseFloat(first.temperature2mMean);
+  const windTrend =
+    parseFloat(last.windSpeed10mMax) - parseFloat(first.windSpeed10mMax);
+  const precipitationTrend =
+    parseFloat(last.precipitationSum) - parseFloat(first.precipitationSum);
 
   return {
-    temperature: tempTrend > 2 ? 'increasing' : tempTrend < -2 ? 'decreasing' : 'stable',
-    wind: windTrend > 5 ? 'increasing' : windTrend < -5 ? 'decreasing' : 'stable',
-    precipitation: precipitationTrend > 10 ? 'increasing' : precipitationTrend < -10 ? 'decreasing' : 'stable',
+    temperature:
+      tempTrend > 2 ? "increasing" : tempTrend < -2 ? "decreasing" : "stable",
+    wind:
+      windTrend > 5 ? "increasing" : windTrend < -5 ? "decreasing" : "stable",
+    precipitation:
+      precipitationTrend > 10
+        ? "increasing"
+        : precipitationTrend < -10
+        ? "decreasing"
+        : "stable",
   };
 }
 
 function findWeatherExtremes(forecasts: any[]) {
   if (forecasts.length === 0) return null;
 
-  const temperatures = forecasts.map(f => parseFloat(f.temperature2mMean));
-  const windSpeeds = forecasts.map(f => parseFloat(f.windSpeed10mMax));
-  const precipitations = forecasts.map(f => parseFloat(f.precipitationSum));
+  const temperatures = forecasts.map((f) => parseFloat(f.temperature2mMean));
+  const windSpeeds = forecasts.map((f) => parseFloat(f.windSpeed10mMax));
+  const precipitations = forecasts.map((f) => parseFloat(f.precipitationSum));
 
   return {
     maxTemperature: Math.max(...temperatures),
@@ -259,11 +284,13 @@ function identifyWeatherPatterns(forecasts: any[]) {
   }
 
   // Check for temperature swings
-  const temperatures = forecasts.map(f => parseFloat(f.temperature2mMean));
+  const temperatures = forecasts.map((f) => parseFloat(f.temperature2mMean));
   const tempRange = Math.max(...temperatures) - Math.min(...temperatures);
-  
+
   if (tempRange > 10) {
-    patterns.push(`Large temperature variation: ${tempRange.toFixed(1)}°C range`);
+    patterns.push(
+      `Large temperature variation: ${tempRange.toFixed(1)}°C range`
+    );
   }
 
   return patterns;

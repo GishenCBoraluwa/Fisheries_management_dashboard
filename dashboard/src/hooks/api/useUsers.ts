@@ -1,8 +1,8 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
-import { apiClient } from '@/lib/api';
-import { queryKeys, queryClient } from '@/lib/queryClient';
-import { useUIState } from '@/lib/store';
-import { PaginationParams, UserSettings } from '@/types/api';
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api";
+import { queryKeys, queryClient } from "@/lib/queryClient";
+import { useUIState } from "@/lib/store";
+import { PaginationParams, UserSettings } from "@/types/api";
 
 export function useAllUsers(params?: PaginationParams) {
   return useQuery({
@@ -41,24 +41,26 @@ export function useUpdateUserSettings(userId: number) {
   const { addNotification } = useUIState();
 
   return useMutation({
-    mutationFn: (settings: Partial<UserSettings>) => 
+    mutationFn: (settings: Partial<UserSettings>) =>
       apiClient.updateUserSettings(userId, settings),
     onSuccess: () => {
       // Invalidate user settings to refresh data
-      queryClient.invalidateQueries({ queryKey: queryKeys.users.settings(userId) });
-      
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.users.settings(userId),
+      });
+
       addNotification({
-        type: 'success',
-        title: 'Settings Updated',
-        message: 'User settings have been updated successfully',
+        type: "success",
+        title: "Settings Updated",
+        message: "User settings have been updated successfully",
       });
     },
     onError: (error) => {
-      console.error('Failed to update user settings:', error);
+      console.error("Failed to update user settings:", error);
       addNotification({
-        type: 'error',
-        title: 'Settings Update Failed',
-        message: 'Failed to update user settings. Please try again.',
+        type: "error",
+        title: "Settings Update Failed",
+        message: "Failed to update user settings. Please try again.",
       });
     },
   });
@@ -67,12 +69,12 @@ export function useUpdateUserSettings(userId: number) {
 // User analytics and insights
 export function useUserAnalytics() {
   return useQuery({
-    queryKey: [...queryKeys.users.all, 'analytics'],
+    queryKey: [...queryKeys.users.all, "analytics"],
     queryFn: async () => {
       // Fetch all users with minimal pagination to get total count
       const usersResponse = await apiClient.getAllUsers({ limit: 1 });
       const totalUsers = usersResponse.pagination?.total || 0;
-      
+
       // You could extend this to fetch more analytics data
       return {
         totalUsers,

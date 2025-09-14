@@ -1,99 +1,46 @@
-"use client"
+'use client';
 
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-} from "@tanstack/react-table"
+import { DataTable } from '@/components/data-table';
+import { columns } from './columns';
+import { useApi } from '@/hooks/useApi';
+import { useState } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { DataTablePagination } from "@/components/TablePagination"
-import React, { useState } from "react"
+export default function BlogsDataTable() {
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(10);
+  const [category, setCategory] = useState<string | undefined>(undefined);
+  const { useBlogPosts } = useApi();
+  const { data, isLoading, error } = useBlogPosts(category, page, limit);
 
-interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-}
+  if (isLoading) return <div>Loading blog posts...</div>;
+  if (error) return <div>Error loading blog posts: {error.message}</div>;
 
-export function DataTable<TData, TValue>({
-  columns,
-  data,
-}: DataTableProps<TData, TValue>) {
-
-  const [sorting, setSorting] = useState<SortingState>([])
-  const [rowSelection, setRowSelection] = useState({})
-
-  const table = useReactTable({
-    data,
-    columns,
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    state: {
-      sorting,
-      rowSelection,
-    },
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onRowSelectionChange: setRowSelection,
-  })
-
-  
   return (
-    <div className="overflow-hidden rounded-md border">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                return (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                )
-              })}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows?.length ? (
-            table.getRowModel().rows.map((row) => (
-              <TableRow
-                key={row.id}
-                data-state={row.getIsSelected() && "selected"}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
-                No results.
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-      <DataTablePagination table={table} />
+    <div>
+      <div className="flex justify-between items-center mb-4">
+        <Select value={category} onValueChange={setCategory}>
+          <SelectTrigger className="w-40">
+            <SelectValue placeholder="All Categories" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="undefined">All Categories</SelectItem>
+            <SelectItem value="climate_change">Climate Change</SelectItem>
+            <SelectItem value="overfishing">Overfishing</SelectItem>
+            <SelectItem value="iuu_fishing">IUU Fishing</SelectItem>
+            <SelectItem value="policy">Policy</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <DataTable
+        columns={columns}
+        data={data?.posts || []}
+        searchKey="title"
+        searchPlaceholder="Search blog posts..."
+        pagination={data?.pagination}
+        onPageChange={setPage}
+        onLimitChange={setLimit}
+      />
     </div>
-  )
+  );
 }

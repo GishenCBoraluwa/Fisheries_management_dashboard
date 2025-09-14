@@ -1,128 +1,47 @@
-import { Badge } from "./ui/badge";
-import { Card, CardContent, CardFooter, CardTitle } from "./ui/card";
-import Image from "next/image";
+'use client';
 
-const popularContent = [
-  {
-    id: 1,
-    title: "Subscription renewal",
-    Badge: "Michael johnson",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGLRAlpUwgnA01Ksosn99mzvGi1dZEeLS0Mw&s",
-    count: 1300,
-  },
-  {
-    id: 2,
-    title: "New order",
-    Badge: "Jane Smith",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGLRAlpUwgnA01Ksosn99mzvGi1dZEeLS0Mw&s",
-    count: 2500,
-  },
-  {
-    id: 3,
-    title: "Refund issued",
-    Badge: "John Doe",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGLRAlpUwgnA01Ksosn99mzvGi1dZEeLS0Mw&s",
-    count: 500,
-  },
-  {
-    id: 4,
-    title: "Payment received",
-    Badge: "Alice Johnson",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGLRAlpUwgnA01Ksosn99mzvGi1dZEeLS0Mw&s",
-    count: 1800,
-  },
-  {
-    id: 5,
-    title: "Subscription renewal",
-    Badge: "Bob Smith",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGLRAlpUwgnA01Ksosn99mzvGi1dZEeLS0Mw&s",
-    count: 1200,
-  },
-];
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useApi } from '@/hooks/useApi';
+import { cn, formatCurrency, formatDate } from '@/lib/utils';
 
-const latestTransactions = [
-  {
-    id: 1,
-    title: "Order #12345",
-    Badge: "Completed",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGLRAlpUwgnA01Ksosn99mzvGi1dZEeLS0Mw&s",
-    count: 150,
-  },
-  {
-    id: 2,
-    title: "Order #12346",
-    Badge: "Pending",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGLRAlpUwgnA01Ksosn99mzvGi1dZEeLS0Mw&s",
-    count: 75,
-  },
-  {
-    id: 3,
-    title: "Order #12347",
-    Badge: "Cancelled",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGLRAlpUwgnA01Ksosn99mzvGi1dZEeLS0Mw&s",
-    count: 30,
-  },
-  {
-    id: 4,
-    title: "Order #12348",
-    Badge: "Completed",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGLRAlpUwgnA01Ksosn99mzvGi1dZEeLS0Mw&s",
-    count: 200,
-  },
-  {
-    id: 5,
-    title: "Order #12349",
-    Badge: "Pending",
-    image:
-      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQGLRAlpUwgnA01Ksosn99mzvGi1dZEeLS0Mw&s",
-    count: 90,
-  },
-];
+export default function CardList({ title }: { title: string }) {
+  const { usePendingOrders, useLatestTransactions } = useApi();
+  const { data: pendingData } = usePendingOrders();
+  const { data: transactionsData } = useLatestTransactions();
 
-const CardList = ({ title }: { title: string }) => {
-  const list =
-    title === "Popular Content" ? popularContent : latestTransactions;
+  const list = title === 'Pending Orders' ? pendingData?.orders : transactionsData?.orders;
+
+  if (!list) return <div>Loading {title.toLowerCase()}...</div>;
 
   return (
     <div>
       <h1 className="text-lg font-medium mb-6">{title}</h1>
       <div className="flex flex-col gap-2">
-        {list.map((item) => (
-          <Card
-            key={item.id}
-            className="flex-row items-center justify-between gap-4 p-4"
-          >
-            <div className="w-12 h-12 rounded-sm relative overflow-hidden">
-              <Image
-                src={item.image}
-                alt={item.title}
-                fill
-                className="object-cover"
-              />
-            </div>
-            <CardContent className="flex-1 p-0">
-              <CardTitle className="text-sm font-medium">
-                {item.title}
-              </CardTitle>
-              <Badge variant="secondary" className="text-xs">
-                {item.Badge}
+        {list?.map((item) => (
+          <Card key={item.id} className="flex-row items-center justify-between gap-4 p-4">
+            <CardHeader className="p-0">
+              <CardTitle className="text-sm font-medium">Order #{item.id}</CardTitle>
+              <p className="text-xs text-muted-foreground">{formatDate(item.orderDate)}</p>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Badge
+                className={cn(
+                  item.status === 'completed' && 'bg-green-100 text-green-800',
+                  item.status === 'pending' && 'bg-yellow-100 text-yellow-800',
+                  item.status === 'delivered' && 'bg-blue-100 text-blue-800',
+                  item.status === 'cancelled' && 'bg-red-100 text-red-800'
+                )}
+              >
+                {item.status.toUpperCase()}
               </Badge>
             </CardContent>
-            <CardFooter className="p=0">{item.count / 1000}K</CardFooter>
+            <CardContent className="p-0">
+              {formatCurrency(item.totalAmount)}
+            </CardContent>
           </Card>
         ))}
       </div>
     </div>
   );
-};
-
-export default CardList;
+}

@@ -1,25 +1,26 @@
 import { ColumnDef } from '@tanstack/react-table';
-import { FishType } from '@/types/api';
+import { User } from '@/types/api';
 import { Badge } from '@/components/ui/badge';
 import { formatDate } from '@/lib/utils';
 
-export const columns: ColumnDef<FishType>[] = [
+export const columns: ColumnDef<User>[] = [
   {
     accessorKey: 'id',
-    header: 'Fish ID',
+    header: 'User ID',
     cell: ({ row }) => `#${row.getValue('id')}`,
   },
   {
-    accessorKey: 'fishName',
+    accessorKey: 'firstName',
     header: 'Name',
+    cell: ({ row }) => `${row.getValue('firstName')} ${row.getValue('lastName')}`,
   },
   {
-    accessorKey: 'scientificName',
-    header: 'Scientific Name',
+    accessorKey: 'email',
+    header: 'Email',
   },
   {
-    accessorKey: 'category',
-    header: 'Category',
+    accessorKey: 'phoneNumber',
+    header: 'Phone',
   },
   {
     accessorKey: 'isActive',
@@ -31,8 +32,8 @@ export const columns: ColumnDef<FishType>[] = [
     ),
   },
   {
-    accessorKey: 'createdAt',
-    header: 'Created',
-    cell: ({ row }) => formatDate(row.getValue('createdAt')),
+    accessorKey: 'registrationDate',
+    header: 'Registered',
+    cell: ({ row }) => formatDate(row.getValue('registrationDate')),
   },
 ];
