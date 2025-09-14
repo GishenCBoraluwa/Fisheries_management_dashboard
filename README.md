@@ -1,2 +1,0 @@
-# Fisheries_management_dashboard
-Fisheries_management_dashboard
